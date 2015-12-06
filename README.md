@@ -22,5 +22,5 @@ javac *.java
 java PathFinder
 ```
 
-Examples of maps are located under **maps** directory.
+Examples of maps are located under **maps** directory ([*] http://pr.willowgarage.com/data/maps/).
 
