@@ -1,21 +1,41 @@
-import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import javax.swing.JComboBox;
 
 public class PathFinderController {
 
 	PathFinderModel model;
 	PathFinderView view;
+	
+	AlgorithmActionListener algorithmListner;
 
+	class AlgorithmListener implements AlgorithmActionListener {
+		@Override
+		public void finished() 
+		{
+			view.setPath(model.getPath());
+			view.repaint();
+		}
+
+		@Override
+		public void refresh() {
+			view.repaint();
+		}
+	}
+	
 	public PathFinderController(PathFinderModel model, PathFinderView view) 
 	{
 		this.model = model;
 		this.view = view;
 
-		this.model.resize(view.getCountRow(), view.getCountColumn()); // resize model size to view size
-
+		// add listeners
 		this.view.addStartListener(new StartListener());
 		this.view.addClearButtonListener(new ClearListener());
+		this.view.addNeighborsCountListener(new NeighboursCountChangeListener());
+		
+		algorithmListner = new AlgorithmListener();
+		this.model.addAlgorithmListener(algorithmListner);
 
 		this.view.setVisible(true);
 	}
@@ -23,43 +43,26 @@ public class PathFinderController {
 	class StartListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) 
 		{
-
 			view.clearValues();
-
-			model.resize(view.getCountRow(), view.getCountColumn());
 			model.setMap(view.getMapView());
-
-			Node[][] imMap = new Node[view.getCountRow()][view.getCountColumn()]; // imported map
-			for (int i=0; i<view.getCountRow(); ++i) {
-				for (int j=0; j<view.getCountColumn(); ++j) {
-					imMap[i][j] = new Node(view.getMapView()[i][j]);
-				}
-			}
-			
-			model.setMap(imMap);			
-
-			List<Node> path = model.runBreadthFirstSerach(view.getStartNode(), view.getEndNode());
-
-			Node[][] expMap = new Node[view.getCountRow()][view.getCountColumn()];
-
-			for (int i=0; i<view.getCountRow(); ++i) {
-				for (int j=0; j<view.getCountColumn(); ++j) {
-					expMap[i][j] = new Node(model.getMap()[i][j]);
-				}
-			}
-
-			view.setMapView(expMap);
-			view.setPath(path);
-			view.repaint();
+			model.startAlgorithm(view.getAlgorithmName(), view.getStartNode(), view.getEndNode());
 		}
 	}
 
 	class ClearListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) 
 		{
-			System.out.println("ClearListener()");
 			view.clearMap();
 			view.repaint();
+		}
+	}
+	
+	class NeighboursCountChangeListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+		        JComboBox<?> cb = (JComboBox<?>)e.getSource();
+		        int neighbourscount =  Integer.parseInt((String) cb.getSelectedItem());
+		        System.out.println(neighbourscount);
+		        model.setNeighboursCount(neighbourscount);
 		}
 	}
 }

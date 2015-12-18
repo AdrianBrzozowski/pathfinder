@@ -1,49 +1,62 @@
-import java.io.IOException;
 import java.util.List;
 
 public class PathFinderModel {
 
-	private MapModel mapModel;
+	private GridMap map;
+	private Algorithm algorithm;
+	private AlgorithmProperty algorithmProp;
+	
+	private AlgorithmActionListener algorithmListener;
 
 	public PathFinderModel() 
 	{
 		System.out.println("Model()");
-		mapModel = new MapModel(0, 0);
-	}	
-
-	public Node[][] getMap()
-	{
-		return mapModel.getMap();
+		this.map = new GridMap();
+		this.algorithmProp = new AlgorithmProperty();
 	}
 
-	public void setMap(Node[][] map)
+	public GridMap getMap() 
 	{
-		this.mapModel.setMap(map);
+		return map;
 	}
 
-	public List<Node> runBreadthFirstSerach(Node startNode, Node goalNode)
+	public void setMap(GridMap map) 
 	{
-		try {
-			return mapModel.breadthFirstSerach(startNode, goalNode);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		this.map.setMap(map);
+	}
+	
+	public void setNeighboursCount(int neighboursCount)
+	{
+		algorithmProp.setDirsCount(neighboursCount);
+	}
+
+	public int getCountRow() 
+	{
+		return map.getCountRow();
+	}
+
+	public int getCountColumn() 
+	{
+		return map.getCountColumn();
+	}
+
+	public void addAlgorithmListener(AlgorithmActionListener algorithmListener) {
+		this.algorithmListener = algorithmListener;
+	}
+
+	public void startAlgorithm(String algorithmName, Node start, Node goal) {
+
+		this.algorithm = AlgorithmFactory.getInstance(algorithmName, getMap(), start, goal);
+		
+		if (this.algorithm != null) {
+			this.algorithm.setProperty(algorithmProp);
+			this.algorithm.setListener(algorithmListener);
+			this.algorithm.start();
 		}
-		return null;
 	}
 
-	public int getCountRow()
+	public List<Node> getPath() 
 	{
-		return mapModel.getHeight();
-	}
-
-	public int getCountColumn()
-	{
-		return mapModel.getWidth();
-	}
-
-	public void resize(int height, int width)
-	{
-		this.mapModel.resize(height, width);
+		return algorithm.getPath();
 	}
 }

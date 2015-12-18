@@ -22,6 +22,7 @@ import java.util.Scanner;
 import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -82,6 +83,11 @@ public class PathFinderView extends JFrame {
 	private SpinnerModel colCountModelSpinner = new SpinnerNumberModel(COL_COUNT_DEFAULT, COL_COUNT_MIN, COL_COUNT_MAX,
 			COL_COUNT_STEP);
 	private JSpinner colCountSpinner = new JSpinner(colCountModelSpinner);
+	
+	private JComboBox<Object> algortihmsComboBox = new JComboBox<Object>(AlgorithmFactory.getAlgorithmList());
+	
+	String[] neightboursCountStrings = {"4", "8"};
+	private JComboBox<Object> neightboursCountComboBox = new JComboBox<Object>(neightboursCountStrings);
 
 	class SpinnerListener implements ChangeListener {
 		public void stateChanged(ChangeEvent e) 
@@ -134,37 +140,57 @@ public class PathFinderView extends JFrame {
 		gbc.insets = new Insets(4, 4, 4, 4);
 		gbc.anchor = GridBagConstraints.NORTHWEST;
 		controlPanel.add(startButton, gbc);
-		startButton.setPreferredSize(new Dimension(150, 30));
+		startButton.setPreferredSize(new Dimension(200, 30));
 
 		gbc.gridx = 0;
-		gbc.gridy = 1;
+		++gbc.gridy;
 		controlPanel.add(clearButton, gbc);
-		clearButton.setPreferredSize(new Dimension(150, 30));
+		clearButton.setPreferredSize(new Dimension(200, 30));
 
 		JLabel columnLabel = new JLabel("Columns: ");
 		columnLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		gbc.gridx = 0;
-		gbc.gridy = 2;
+		++gbc.gridy;
 		gbc.gridwidth = 1;
 		controlPanel.add(columnLabel, gbc);
 
-		gbc.gridx = 1;
-		gbc.gridy = 2;
+		++gbc.gridx;
 		gbc.gridwidth = 1;
 		controlPanel.add(colCountSpinner, gbc);
+		colCountSpinner.setPreferredSize(new Dimension(90, 22));
 
 		JLabel rowLabel = new JLabel("Rows: ");
 		rowLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		gbc.gridx = 0;
-		gbc.gridy = 3;
+		++gbc.gridy;
 		gbc.gridwidth = 1;
 		controlPanel.add(rowLabel, gbc);
 
-		gbc.gridx = 1;
-		gbc.gridy = 3;
+		++gbc.gridx;
 		gbc.gridwidth = 1;
 		controlPanel.add(rowCountSpinner, gbc);
+		rowCountSpinner.setPreferredSize(new Dimension(90, 22));
 
+		JLabel algorithmLabel = new JLabel("Algorithm: ");
+		algorithmLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		gbc.gridx = 0;
+		++gbc.gridy;
+		controlPanel.add(algorithmLabel, gbc);
+
+		++gbc.gridx;
+		controlPanel.add(algortihmsComboBox, gbc);
+		algortihmsComboBox.setPreferredSize(new Dimension(90, 22));
+		
+		JLabel neightboursCountLabel = new JLabel("Neightbours: ");
+		algorithmLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		gbc.gridx = 0;
+		++gbc.gridy;
+		controlPanel.add(neightboursCountLabel, gbc);
+
+		++gbc.gridx;
+		controlPanel.add(neightboursCountComboBox, gbc);
+		neightboursCountComboBox.setPreferredSize(new Dimension(90, 22));
+		
 		GridBagConstraints gbcFiller = new GridBagConstraints();
 		gbcFiller.gridy = 33;
 		gbcFiller.weightx = 1.0;
@@ -173,7 +199,7 @@ public class PathFinderView extends JFrame {
 		controlPanel.add(Box.createGlue(), gbcFiller);
 
 		controlPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-
+		
 		return controlPanel;
 	}
 
@@ -219,14 +245,19 @@ public class PathFinderView extends JFrame {
 		return menubar;
 	}
 
-	void addStartListener(ActionListener al) 
+	public void addStartListener(ActionListener al) 
 	{
 		startButton.addActionListener(al);
 	}
 
-	void addClearButtonListener(ActionListener al) 
+	public void addClearButtonListener(ActionListener al) 
 	{
 		clearButton.addActionListener(al);
+	}
+	
+	public void addNeighborsCountListener(ActionListener al)
+	{
+		neightboursCountComboBox.addActionListener(al);
 	}
 
 	public void clearMap() 
@@ -239,9 +270,10 @@ public class PathFinderView extends JFrame {
 	public void clearValues() 
 	{
 		this.mapView.SetDefaultValues();
+		this.mapView.setDefaultVisualColors();
 	}
 
-	public Node[][] getMapView() 
+	public GridMap getMapView() 
 	{
 		return this.mapView.getMap();
 	}
@@ -306,6 +338,11 @@ public class PathFinderView extends JFrame {
 	public int[][] getObstacles()
 	{
 		return this.mapView.getObstacles();
+	}
+	
+	public String getAlgorithmName()
+	{
+		return algortihmsComboBox.getSelectedItem().toString();
 	}
 }
 

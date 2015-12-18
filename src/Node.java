@@ -1,4 +1,7 @@
 public class Node {
+	
+	private static final double DEFAULT_VALUE = Double.MAX_VALUE;
+	
 	public enum Type {
 	    START,
 	    END,
@@ -7,10 +10,19 @@ public class Node {
 	    PATH;
 	}
 	
+	public enum VisualType {
+		NORMAL,
+		PROCESSED,
+	    FRONTIER;
+	}
+	
 	private int x, y;
+	private Type type;
+	private VisualType visualType;
+	
 	private Float distance;
+	private double value;
 
-	Type type;
 	Node pathParent; //used in search algorithm for construct path
 
 	public Node()
@@ -20,6 +32,8 @@ public class Node {
 		this.distance = 0f;
 		pathParent = null;
 		type = Type.FREE;
+		visualType = VisualType.NORMAL;
+		value = DEFAULT_VALUE;
 	}
 
 	public Node(int position_y, int position_x) 
@@ -47,11 +61,13 @@ public class Node {
 
 	public Node(Node node)
 	{
-		this.distance = node.getDistance();
-		this.x = node.getPositionX();
-		this.y = node.getPositionY();
+		this.distance = node.distance;
+		this.x = node.x;
+		this.y = node.y;
 		this.pathParent = node.pathParent;
 		this.type = node.type;
+		this.visualType = node.visualType;
+		this.value = node.value;
 	}
 
 	public int getPositionX()
@@ -68,8 +84,13 @@ public class Node {
 	{
 		return distance;
 	}
+	
+	public void setValue(double value)
+	{
+		this.value = value;
+	}
 
-	public void setDistance( Float distance)
+	public void setDistance(Float distance)
 	{
 		this.distance = distance;
 	}
@@ -78,10 +99,25 @@ public class Node {
 	{
 		this.type = type;
 	}
+
+	public void setVisualType(Node.VisualType visualType)
+	{
+		this.visualType = visualType;
+	}
 	
 	public Node.Type getType()
 	{
 		return this.type;
+	}
+	
+	public Node.VisualType getVisualType()
+	{
+		return this.visualType;
+	}
+	
+	public double getValue()
+	{
+		return value;
 	}
 
 	@Override
@@ -89,4 +125,9 @@ public class Node {
 	{
 		return this.getPositionX() == ((Node) obj).getPositionX() && this.getPositionY() == ((Node) obj).getPositionY();
 	}
+	
+
+    public String toString() {
+        return "x: " + getPositionX() + ", y: " + getPositionY() + ", type: " + getType();
+    }
 }
