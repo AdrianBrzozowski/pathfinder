@@ -26,16 +26,24 @@ public abstract class Algorithm extends Thread {
 	public Algorithm(GridMap map, Node start, Node goal)
 	{		
 		this.map = map;
-		this.start = start;
-		this.goal = goal;
+		this.start = map.getNode(start.getPositionY(), start.getPositionX());;
+		this.goal = map.getNode(goal.getPositionY(), goal.getPositionX());
 	}
 
 	@Override
 	public void run() {
 		super.run();
+
+		long startTime = System.currentTimeMillis();
 		work();
+		long endTime   = System.currentTimeMillis();
+
 		discoverPath();
 		notifyFinished();
+		
+		if (finished) {
+			notifyTimeExecution(Long.toString(endTime - startTime));
+		}
 	}
 
 	public LinkedList<Node> getNeighbors(Node node) 
@@ -101,6 +109,20 @@ public abstract class Algorithm extends Thread {
 		}
 	}
 
+	private void notifyTimeExecution(String duration) 
+	{
+		if (listener != null) {
+			listener.setTimeExecution(duration);
+		}
+	}
+	
+	private void notifyPathLenght(String pathLengt) 
+	{
+		if (listener != null) {
+			listener.setPathLength(pathLengt);
+		}
+	}
+
 	protected void notifyRefresh()
 	{
 		if (listener != null) {
@@ -125,15 +147,17 @@ public abstract class Algorithm extends Thread {
 		}
 
 		List<Node> newPath = new LinkedList<Node>();
+		int count = 0;
 
-		System.out.print("Path:");
 		while (node.pathParent != null) {
-			System.out.print(" (" + node + ")");
 			newPath.add(node);
 
 			node = node.pathParent;
+			++count;
 		}
 
+		notifyPathLenght(Integer.toString(count));
+		
 		return newPath;
 	}
 

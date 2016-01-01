@@ -30,7 +30,7 @@ public class GridMap {
 		for (int i = 0; i < obstacles.length; ++i) {
 			for (int j = 0; j < obstacles[0].length; ++j)
 			{
-				data[i][j].setType(obstacles[i][j] == 1 ? Node.Type.OBSTACLE : Node.Type.FREE);
+				data[i][j].setType(obstacles[i][j] == 1 ? Node.Type.OBSTACLE : Node.Type.NORMAL);
 			}
 		}
 	}

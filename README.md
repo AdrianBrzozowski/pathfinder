@@ -12,6 +12,8 @@ Currently supported algorithms
 
 * Breadth-First-Search
 
+![dijkstra](./img/screen-dijkstra.png)
+
 Running the example
 ------------------
 

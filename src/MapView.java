@@ -13,6 +13,12 @@ public class MapView extends JPanel  {
 	private static final long serialVersionUID = 1L;
 
 	// values
+	final static int STOP_DRAW_BORDERS_CELL_WIDTH = 3;
+	final static int STOP_DRAW_BORDERS_CELL_HEIGHT = 3;
+
+	final static int STOP_DRAW_TEXT_CELL_WIDTH = 20;
+	final static int STOP_DRAW_TEXT_CELL_HEIGHT = 20;
+
 	Color textColor = Color.BLUE;
 	Color defaultGridBorderColor = Color.BLACK;
 	Color defaultGridBorderActiveColor = Color.RED;
@@ -20,7 +26,7 @@ public class MapView extends JPanel  {
 
 	private Color[][] gridColor;
 	private Color[][] gridBorderColor;
-	
+
 	private GridMap map;
 	private Node startNode;
 	private Node endNode;
@@ -40,11 +46,11 @@ public class MapView extends JPanel  {
 		case END:
 			color = Color.RED;
 			break;
-		case FREE:
+		case NORMAL:
 			color = Color.WHITE;
 			break;
 		case OBSTACLE:
-			color = Color.GRAY;
+			color = new Color(85, 45, 0);
 			break;
 		case PATH:
 			color = new Color(234, 250, 234);
@@ -56,7 +62,7 @@ public class MapView extends JPanel  {
 
 		return color;
 	}
-	
+
 	public Color getVisualNodeColor(Node.VisualType visualType) 
 	{ 
 		Color color = Color.DARK_GRAY;
@@ -107,11 +113,6 @@ public class MapView extends JPanel  {
 		Node start = getStartNode();
 		Node end = getEndNode();
 
-		if (start== null)
-		{
-			System.out.println("mamy start null");
-		}
-
 		for (int i=0; i<rows; ++i)
 		{
 			for (int j=0; j<columns; ++j)
@@ -121,7 +122,7 @@ public class MapView extends JPanel  {
 					mapNew[i][j] = new Node(this.getMapData()[i][j]);
 					newGridColor[i][j] = new Color(this.gridColor[i][j].getRGB());
 					newGridBorderColor[i][j] = new Color(gridBorderColor[i][j].getRGB());
-					
+
 					mapNew[i][j].setVisualType(Node.VisualType.NORMAL);
 				}
 				else
@@ -162,12 +163,12 @@ public class MapView extends JPanel  {
 				this.gridBorderColor[i][j] = defaultGridBorderColor;
 
 				Node node = this.map.getNode(i, j); 
-				node.setType(Node.Type.FREE);
+				node.setType(Node.Type.NORMAL);
 				node.setVisualType(Node.VisualType.NORMAL);
 			}
 		}
 	}
-	
+
 	public void setDefaultVisualColors()
 	{
 		for (int i=0; i<this.getCountRow(); ++i)
@@ -188,6 +189,8 @@ public class MapView extends JPanel  {
 			{
 				Node node = map.getNode(i, j);
 				node.setDistance(0f);
+				node.setStep(0);
+				node.setParent(null);
 			}
 		}
 
@@ -217,9 +220,13 @@ public class MapView extends JPanel  {
 	protected void paintComponent(Graphics g) 
 	{
 		super.paintComponent(g);
+
 		// draw background
 		g.setColor(getBackground());
 		g.fillRect(0, 0, getWidth(),getHeight());
+
+		double nodeWidth = (double)getWidth() / getCountColumn();
+		double nodeHeight = (double)getHeight() / getCountRow();
 
 		int row, col;
 
@@ -231,17 +238,37 @@ public class MapView extends JPanel  {
 						Node node = map.getNode(row, col);
 						Node.Type nodeType = node.getType();
 
-						Color nodeColor = getNodeColor(Node.Type.FREE);
+						Color nodeColor = getNodeColor(Node.Type.NORMAL);
 
 						if (nodeType != Node.Type.START && nodeType != Node.Type.END)
 						{
-							
-							if (nodeType == Node.Type.FREE && node.getVisualType() != Node.VisualType.NORMAL) {
+
+							if (nodeType == Node.Type.NORMAL) {
 								
-								nodeColor = getVisualNodeColor(node.getVisualType());
+								if (node.getVisualType() == Node.VisualType.PROCESSED) {
+									Color tempNodeColor = getVisualNodeColor(node.getVisualType());
+									int colorFromCost = 255 - node.getCost();
+									float costWeight = 0.4f;
+									int red = (int) (tempNodeColor.getRed() * (1-costWeight) + colorFromCost * costWeight);
+									int green = (int) (tempNodeColor.getGreen() * (1-costWeight) + colorFromCost * costWeight);
+									int blue = (int) (tempNodeColor.getBlue() * (1-costWeight) + colorFromCost * costWeight);
+									
+									red = (red > 255 ? 255 : red);
+									green = (green > 255 ? 255 : green);
+									blue = (blue > 255 ? 255 : blue);
+									
+									nodeColor = new Color(red, green, blue);
+								}
+								else if (node.getVisualType() == Node.VisualType.FRONTIER) {
+									nodeColor = getVisualNodeColor(node.getVisualType());
+								}
+								else if (node.getVisualType() == Node.VisualType.NORMAL) {
+									int colorFromCost = 255 - node.getCost();
+									nodeColor = new Color(colorFromCost, colorFromCost, colorFromCost);									
+								}								
 							} 
-							else {
-							nodeColor = getNodeColor(nodeType);
+							if (nodeType == Node.Type.OBSTACLE) { 
+								nodeColor = getNodeColor(nodeType);
 							}
 						}
 
@@ -252,7 +279,7 @@ public class MapView extends JPanel  {
 		}
 
 		// path
-		if (this.path != null)
+		if (this.path != null && !this.path.isEmpty())
 		{	
 			Node node = path.get(0);
 			Node nodePrev = null;
@@ -266,7 +293,7 @@ public class MapView extends JPanel  {
 
 				if (nodeRow < getCountRow()-1 && nodeRow >= 0 && nodeCol < getCountColumn()-1 || nodeCol >= 0) // if resizing map
 				{
-					if (map.getNode(nodeRow, nodeCol) != null && map.getNode(nodeRow, nodeCol).getType() == Node.Type.FREE)
+					if (map.getNode(nodeRow, nodeCol) != null && map.getNode(nodeRow, nodeCol).getType() == Node.Type.NORMAL)
 					{
 						drawFillNode(g, node, nodeColor);
 					}
@@ -274,7 +301,7 @@ public class MapView extends JPanel  {
 					if (node.pathParent != null) {
 						drawPath(g, node, node.pathParent, defaultPathLineColor);
 					}
-					
+
 					if (nodePrev != null) {
 						drawPath(g, node, nodePrev, defaultPathLineColor);
 					}
@@ -291,21 +318,19 @@ public class MapView extends JPanel  {
 		// end node
 		drawFillNode(g, endNode, getNodeColor(Node.Type.END));
 
-		// text
-		if (getCountRow() < 128 && getCountColumn() < 128) {
+		// draw step
+		if (nodeWidth >= STOP_DRAW_TEXT_CELL_WIDTH && nodeHeight >= STOP_DRAW_TEXT_CELL_HEIGHT) {
 			int x, y;
 			for (row = 0; row < getCountRow(); row++) {
 				for (col = 0; col < getCountColumn(); col++) {
 					if (gridColor[row][col] != null) {
-						double nodeWidth = (double)getWidth() / getCountColumn();
-						double nodeHeight = (double)getHeight() / getCountRow();
 						x = (int)(col*nodeWidth);
 						y = (int)(row*nodeHeight);
 
 						Node.Type nodeType = map.getNode(row, col).getType();
 
 						if (nodeType != Node.Type.OBSTACLE)	{
-							String value = Float.toString(map.getNode(row, col).getDistance());
+							String value = Integer.toString(map.getNode(row, col).getStep());
 							g.setColor(textColor);
 							g.drawString(value, x+5, y+15);
 						}
@@ -315,7 +340,7 @@ public class MapView extends JPanel  {
 		}
 
 		// border
-		if (getCountRow() < 150 && getCountColumn() < 150) {
+		if (nodeWidth >= STOP_DRAW_BORDERS_CELL_WIDTH && nodeHeight >= STOP_DRAW_BORDERS_CELL_HEIGHT) {
 			for (row = 0; row < getCountRow(); row++) {
 				for (col = 0; col < getCountColumn(); col++) {
 					if (gridBorderColor[row][col] != null)
@@ -347,7 +372,7 @@ public class MapView extends JPanel  {
 	{
 		return this.map;
 	}
-	
+
 	public Node[][] getMapData()
 	{
 		return this.map.getData();
@@ -373,7 +398,7 @@ public class MapView extends JPanel  {
 		this.path = path;
 	}
 
-	public void setObstacles(int[][] obstacles, int rows, int columns)
+	public void setCosts(int[][] costs, int rows, int columns)
 	{			
 		resizeMap(rows, columns);
 
@@ -381,29 +406,41 @@ public class MapView extends JPanel  {
 		{
 			for (int j=0; j<columns; ++j)
 			{
-				map.getNode(i, j).setType(obstacles[i][j] < 240 ? Node.Type.OBSTACLE : Node.Type.FREE);
+				map.getNode(i, j).setCost(costs[i][j]);;
 			}
-		}
+		}		
 	}
 
-	public int[][] getObstacles()
+	public void updateObstacles(int lethal) 
 	{
-		int obstacles[][] = new int[getCountRow()][getCountColumn()];
-		for (int i=0; i<getCountRow(); ++i)
+		for (int i=0; i<this.getCountRow(); ++i)
 		{
-			for (int j=0; j<getCountColumn(); ++j)
+			for (int j=0; j<this.getCountColumn(); ++j)
 			{
-				if (map.getNode(i, j).getType() == Node.Type.OBSTACLE) {
-					obstacles[i][j] = 0;
-				}
-				else {
-					obstacles[i][j] = 255;
-				}
+				Node node = map.getNode(i, j);
+				node.setType(node.getCost() >= lethal ? Node.Type.OBSTACLE : Node.Type.NORMAL);
 			}
 		}
-
-		return obstacles;
 	}
+	
+//	public int[][] getObstacles()
+//	{
+//		int obstacles[][] = new int[getCountRow()][getCountColumn()];
+//		for (int i=0; i<getCountRow(); ++i)
+//		{
+//			for (int j=0; j<getCountColumn(); ++j)
+//			{
+//				if (map.getNode(i, j).getType() == Node.Type.OBSTACLE) {
+//					obstacles[i][j] = 0;
+//				}
+//				else {
+//					obstacles[i][j] = 255;
+//				}
+//			}
+//		}
+//
+//		return obstacles;
+//	}
 
 	public void setStartNode(int row, int column)
 	{
@@ -484,7 +521,7 @@ public class MapView extends JPanel  {
 
 		if (centerRow < getCountRow()-1 && centerRow >= 0 && centerCol < getCountColumn()-1 || centerCol >= 0) // if resizing map
 		{
-			if (map.getNode(centerRow, centerCol) != null && map.getNode(centerRow, centerCol).getType() == Node.Type.FREE)
+			if (map.getNode(centerRow, centerCol) != null && map.getNode(centerRow, centerCol).getType() == Node.Type.NORMAL)
 			{					
 				if (centerRow > fromRow && centerCol == fromCol) {		
 					y_f -= (int)nodeHeight/2 - drawOffset;
@@ -537,7 +574,7 @@ public class MapView extends JPanel  {
 		boolean isStartMove = false;
 		boolean isEndMove = false;
 
-		Node.Type clickedNodeType = Node.Type.FREE;
+		Node.Type clickedNodeType = Node.Type.NORMAL;
 
 		public int getMousePositionOnRow()
 		{
@@ -575,7 +612,7 @@ public class MapView extends JPanel  {
 					}
 				}
 
-				// draw selected square
+				// update selected square
 				if (this.mapView.gridBorderColor[row][col] != null) 
 				{
 					this.mapView.gridBorderColor[row][col] = defaultGridBorderActiveColor;
@@ -590,7 +627,7 @@ public class MapView extends JPanel  {
 		{
 			this.row = mapView.findRow( e.getY() );
 			this.col = mapView.findColumn( e.getX() );
-			
+
 			Node node = this.mapView.map.getNode(row, col); 
 
 			if (node.equals(getStartNode()))
@@ -603,7 +640,7 @@ public class MapView extends JPanel  {
 			}
 			else if (node.getType() == Node.Type.OBSTACLE)
 			{	
-				node.setType(Node.Type.FREE);
+				node.setType(Node.Type.NORMAL);
 				clickedNodeType = node.getType();
 			}
 			else if (node.getType() != Node.Type.OBSTACLE)
@@ -631,11 +668,11 @@ public class MapView extends JPanel  {
 
 			if (isStartMove)
 			{	
-				node.setType(Node.Type.FREE);
+				node.setType(Node.Type.NORMAL);
 			}
 			else if (isEndMove)
 			{
-				node.setType(Node.Type.FREE);
+				node.setType(Node.Type.NORMAL);
 			}
 
 			isStartMove = false;
@@ -671,7 +708,7 @@ public class MapView extends JPanel  {
 					}
 				}
 
-				// draw selected square
+				// update selected square
 				if (this.mapView.gridBorderColor[row][col] != null) 
 				{
 					this.mapView.gridBorderColor[row][col] = defaultGridBorderActiveColor;

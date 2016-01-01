@@ -5,7 +5,7 @@ public class Node {
 	public enum Type {
 	    START,
 	    END,
-	    FREE,
+	    NORMAL,
 	    OBSTACLE,
 	    PATH;
 	}
@@ -17,10 +17,15 @@ public class Node {
 	}
 	
 	private int x, y;
+	private int cost;
+	
+	// can be modified in algorithms
 	private Type type;
 	private VisualType visualType;
 	
-	private Float distance;
+	private int step; // step in which this node was processed
+	
+	private double distance;
 	private double value;
 
 	Node pathParent; //used in search algorithm for construct path
@@ -30,8 +35,10 @@ public class Node {
 		this.x = 0;
 		this.y = 0;
 		this.distance = 0f;
+		this.step = 0;
+		this.cost = 0;
 		pathParent = null;
-		type = Type.FREE;
+		type = Type.NORMAL;
 		visualType = VisualType.NORMAL;
 		value = DEFAULT_VALUE;
 	}
@@ -64,6 +71,8 @@ public class Node {
 		this.distance = node.distance;
 		this.x = node.x;
 		this.y = node.y;
+		this.step = node.step;
+		this.cost = node.cost;
 		this.pathParent = node.pathParent;
 		this.type = node.type;
 		this.visualType = node.visualType;
@@ -72,17 +81,27 @@ public class Node {
 
 	public int getPositionX()
 	{
-		return x;
+		return this.x;
 	}
 
 	public int getPositionY()
 	{
-		return y;
+		return this.y;
 	}
 
-	public Float getDistance()
+	public double getDistance()
 	{
-		return distance;
+		return this.distance;
+	}
+	
+	public int getStep()
+	{
+		return this.step;
+	}
+	
+	public int getCost()
+	{
+		return this.cost;
 	}
 	
 	public void setValue(double value)
@@ -90,9 +109,19 @@ public class Node {
 		this.value = value;
 	}
 
-	public void setDistance(Float distance)
+	public void setDistance(double distance)
 	{
 		this.distance = distance;
+	}
+	
+	public void setStep(int step)
+	{
+		this.step = step;
+	}
+	
+	public void setCost(int cost)
+	{
+		this.cost = cost;
 	}
 
 	public void setType(Node.Type type)
@@ -103,6 +132,11 @@ public class Node {
 	public void setVisualType(Node.VisualType visualType)
 	{
 		this.visualType = visualType;
+	}
+	
+	public void setParent(Node node)
+	{
+		this.pathParent = node;
 	}
 	
 	public Node.Type getType()

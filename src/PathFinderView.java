@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -31,6 +32,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
@@ -62,6 +64,11 @@ public class PathFinderView extends JFrame {
 	final static int COL_COUNT_MIN = 1;
 	final static int COL_COUNT_MAX = 8192;
 	final static int COL_COUNT_STEP = 1;
+	
+	final static int LETHAL_COST_DEFAULT = 250;
+	final static int LETHAL_COST_MIN = 0;
+	final static int LETHAL_COST_MAX = 256;
+	final static int LETHAL_COST_STEP = 1;
 
 	// mapView
 	final static int PREFERED_SIZE_WIDTH = 640;
@@ -77,9 +84,11 @@ public class PathFinderView extends JFrame {
 	private MapView mapView = new MapView(INIT_ROW_COUNT_MAP, INIT_COL_COUNT_MAP);
 	private JButton startButton = new JButton(START_BUTTON_NAME);
 	private JButton clearButton = new JButton(CLEAR_BUTTON_NAME);
+	
 	private SpinnerModel rowCountModelSpinner = new SpinnerNumberModel(ROW_COUNT_DEFAULT, ROW_COUNT_MIN, ROW_COUNT_MAX,
 			ROW_COUNT_STEP);
 	private JSpinner rowCountSpinner = new JSpinner(rowCountModelSpinner);
+	
 	private SpinnerModel colCountModelSpinner = new SpinnerNumberModel(COL_COUNT_DEFAULT, COL_COUNT_MIN, COL_COUNT_MAX,
 			COL_COUNT_STEP);
 	private JSpinner colCountSpinner = new JSpinner(colCountModelSpinner);
@@ -87,12 +96,27 @@ public class PathFinderView extends JFrame {
 	private JComboBox<Object> algortihmsComboBox = new JComboBox<Object>(AlgorithmFactory.getAlgorithmList());
 	
 	String[] neightboursCountStrings = {"4", "8"};
-	private JComboBox<Object> neightboursCountComboBox = new JComboBox<Object>(neightboursCountStrings);
+	private JComboBox<Object> neighboursCountComboBox = new JComboBox<Object>(neightboursCountStrings);
+	
+	private SpinnerModel lethalCostModelSpinner = new SpinnerNumberModel(LETHAL_COST_DEFAULT, LETHAL_COST_MIN, LETHAL_COST_MAX,
+			LETHAL_COST_STEP);
+	protected JSpinner lethalCostSpinner = new JSpinner(lethalCostModelSpinner);
+	
+	JLabel timeAlgorithmExecution = new JLabel(" - ");
+	JLabel pathLenghtAlgorithm = new JLabel(" - ");
 
 	class SpinnerListener implements ChangeListener {
 		public void stateChanged(ChangeEvent e) 
 		{
 			mapView.resizeMap((Integer) rowCountModelSpinner.getValue(), (Integer) colCountModelSpinner.getValue());
+			mapView.repaint();
+		}
+	}
+	
+	class LetahCostListener implements ChangeListener {
+		public void stateChanged(ChangeEvent e) 
+		{
+			mapView.updateObstacles((Integer) lethalCostModelSpinner.getValue());
 			mapView.repaint();
 		}
 	}
@@ -133,19 +157,19 @@ public class PathFinderView extends JFrame {
 
 		rowCountSpinner.addChangeListener(new SpinnerListener());
 		colCountSpinner.addChangeListener(new SpinnerListener());
+		lethalCostModelSpinner.addChangeListener(new LetahCostListener());
 
+		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.gridwidth = 2;
 		gbc.insets = new Insets(4, 4, 4, 4);
 		gbc.anchor = GridBagConstraints.NORTHWEST;
 		controlPanel.add(startButton, gbc);
-		startButton.setPreferredSize(new Dimension(200, 30));
 
 		gbc.gridx = 0;
 		++gbc.gridy;
 		controlPanel.add(clearButton, gbc);
-		clearButton.setPreferredSize(new Dimension(200, 30));
 
 		JLabel columnLabel = new JLabel("Columns: ");
 		columnLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -157,7 +181,6 @@ public class PathFinderView extends JFrame {
 		++gbc.gridx;
 		gbc.gridwidth = 1;
 		controlPanel.add(colCountSpinner, gbc);
-		colCountSpinner.setPreferredSize(new Dimension(90, 22));
 
 		JLabel rowLabel = new JLabel("Rows: ");
 		rowLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -169,7 +192,6 @@ public class PathFinderView extends JFrame {
 		++gbc.gridx;
 		gbc.gridwidth = 1;
 		controlPanel.add(rowCountSpinner, gbc);
-		rowCountSpinner.setPreferredSize(new Dimension(90, 22));
 
 		JLabel algorithmLabel = new JLabel("Algorithm: ");
 		algorithmLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -179,17 +201,58 @@ public class PathFinderView extends JFrame {
 
 		++gbc.gridx;
 		controlPanel.add(algortihmsComboBox, gbc);
-		algortihmsComboBox.setPreferredSize(new Dimension(90, 22));
 		
-		JLabel neightboursCountLabel = new JLabel("Neightbours: ");
+		JLabel neighboursCountLabel = new JLabel("Neighbours: ");
 		algorithmLabel.setHorizontalAlignment(SwingConstants.LEFT);
 		gbc.gridx = 0;
 		++gbc.gridy;
-		controlPanel.add(neightboursCountLabel, gbc);
+		controlPanel.add(neighboursCountLabel, gbc);
 
 		++gbc.gridx;
-		controlPanel.add(neightboursCountComboBox, gbc);
-		neightboursCountComboBox.setPreferredSize(new Dimension(90, 22));
+		controlPanel.add(neighboursCountComboBox, gbc);
+		
+		JLabel lethalLabel = new JLabel("Lethal cost: ");
+		lethalLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		gbc.gridx = 0;
+		++gbc.gridy;
+		controlPanel.add(lethalLabel, gbc);
+
+		++gbc.gridx;
+		controlPanel.add(lethalCostSpinner, gbc);
+		
+		JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
+		separator.setPreferredSize(new Dimension(5,1));
+		gbc.gridwidth = 2;
+		gbc.gridx = 0;
+		++gbc.gridy;
+		controlPanel.add(separator, gbc);
+
+        JPanel algorithmInfoPanel = new JPanel();
+        algorithmInfoPanel.setLayout(new GridBagLayout());
+
+		GridBagConstraints gbcAlgorithmInfo = new GridBagConstraints();
+		gbcAlgorithmInfo.fill = GridBagConstraints.HORIZONTAL;
+		gbcAlgorithmInfo.gridx = 0;
+		gbcAlgorithmInfo.gridy = 0;
+		gbcAlgorithmInfo.insets = new Insets(4, 4, 4, 4);
+		gbcAlgorithmInfo.anchor = GridBagConstraints.NORTHWEST;
+		
+        algorithmInfoPanel.setBackground(new Color(216, 224, 248));
+        algorithmInfoPanel.setBorder(BorderFactory.createTitledBorder("Algorithm"));
+		
+		JLabel algorithmDurationTimeLabel = new JLabel("Time: ");
+		algorithmInfoPanel.add(algorithmDurationTimeLabel, gbcAlgorithmInfo);
+		++gbcAlgorithmInfo.gridx;
+		algorithmInfoPanel.add(timeAlgorithmExecution, gbcAlgorithmInfo);
+		
+		JLabel algorithmPathLengthLabel = new JLabel("Path lenght: ");
+		gbcAlgorithmInfo.gridx = 0;
+		++gbcAlgorithmInfo.gridy;
+		algorithmInfoPanel.add(algorithmPathLengthLabel, gbcAlgorithmInfo);
+		++gbcAlgorithmInfo.gridx;
+		algorithmInfoPanel.add(pathLenghtAlgorithm, gbcAlgorithmInfo);
+		
+		controlPanel.add(algorithmInfoPanel, gbc);
 		
 		GridBagConstraints gbcFiller = new GridBagConstraints();
 		gbcFiller.gridy = 33;
@@ -257,7 +320,7 @@ public class PathFinderView extends JFrame {
 	
 	public void addNeighborsCountListener(ActionListener al)
 	{
-		neightboursCountComboBox.addActionListener(al);
+		neighboursCountComboBox.addActionListener(al);
 	}
 
 	public void clearMap() 
@@ -265,6 +328,7 @@ public class PathFinderView extends JFrame {
 		this.mapView.SetDefaultValues();
 		this.mapView.setDefaultColors();
 		this.mapView.resizeMap((Integer) rowCountSpinner.getValue(), (Integer) colCountSpinner.getValue());
+		this.mapView.updateObstacles((Integer) lethalCostModelSpinner.getValue());
 	}
 
 	public void clearValues() 
@@ -328,17 +392,32 @@ public class PathFinderView extends JFrame {
 		colCountModelSpinner.setValue(value);
 	}
 
-	public void setObstacles(int[][] obstacles, int height, int width) 
+	public void setCosts(int[][] costs, int height, int width) 
 	{
 		setRowCountSpinner(height);
 		setColCountModelSpinner(width);
-		this.mapView.setObstacles(obstacles, height, width);
+		this.mapView.setCosts(costs, height, width);
+	}
+	
+	public void setTimeAlgorithmExecution(String duration)
+	{
+		this.timeAlgorithmExecution.setText(duration);
+	}
+	
+	public void setPathLenghtAlgorithm(String pathLenght)
+	{
+		this.pathLenghtAlgorithm.setText(pathLenght);
 	}
 
-	public int[][] getObstacles()
+	public void updateObstacles(int lethal)
 	{
-		return this.mapView.getObstacles();
+		this.mapView.updateObstacles(lethal);
 	}
+	
+//	public int[][] getObstacles()
+//	{
+//		return this.mapView.getObstacles();
+//	}
 	
 	public String getAlgorithmName()
 	{
@@ -371,12 +450,21 @@ class PathFinderMenuHandler implements ActionListener, ItemListener {
 			String fileName = openFileChooser.getSelectedFile().getAbsolutePath();
 			String fileExtension = fileName.substring(fileName.lastIndexOf(".")+1,fileName.length());
 
-			int[][] result;
+			int[][] cost; // lethal = 255, freespace = 0
 			int height = 0;
 			int width = 0;
-
-			if (fileExtension.equals("bmp")) {
-
+			
+			boolean isFormatSupported = false;
+			
+			String[] supportedInputExtensions = ImageIO.getReaderFormatNames();
+			fileExtension = fileExtension.toLowerCase();
+			
+			for (String ext: supportedInputExtensions) {
+			    if (ext.trim().toLowerCase().contains(fileExtension))
+			    	isFormatSupported =  true;
+			}
+			
+			if (isFormatSupported) {
 				BufferedImage img = null;
 
 				try {
@@ -393,7 +481,7 @@ class PathFinderMenuHandler implements ActionListener, ItemListener {
 				int green;
 				int blue;
 
-				result = new int[height][width];
+				cost = new int[height][width];
 
 				for (int i=0; i<height; ++i) {
 					for (int j=0; j<width; ++j) {
@@ -402,7 +490,7 @@ class PathFinderMenuHandler implements ActionListener, ItemListener {
 						green = (rgb >> 8) & 0x000000FF;
 						blue = (rgb) & 0x000000FF;
 
-						result[i][j] = (red + green + blue) / 3;
+						cost[i][j] = (red + green + blue) / 3;
 					}
 				}
 			} else if (fileExtension.equals("pgm")) {
@@ -432,7 +520,7 @@ class PathFinderMenuHandler implements ActionListener, ItemListener {
 					// grayRepBytes = 2;
 					// }
 
-					result = new int[height][width];
+					cost = new int[height][width];
 
 					if (magic.equals("P2")) { // plain pgm
 
@@ -440,7 +528,7 @@ class PathFinderMenuHandler implements ActionListener, ItemListener {
 
 						for (int i=0; i<height; ++i) {
 							for (int j=0; j<width; ++j) {
-								result[i][j] = scanner.nextInt();
+								cost[i][j] = scanner.nextInt();
 							}
 						}
 					} else if (magic.equals("P5")) { // raw pgm
@@ -459,7 +547,7 @@ class PathFinderMenuHandler implements ActionListener, ItemListener {
 
 						for (int i=0; i < height; ++i) {
 							for (int j = 0; j < width; ++j) {
-								result[i][j] = dis.readUnsignedByte();
+								cost[i][j] = dis.readUnsignedByte();
 							}
 						}
 					}
@@ -474,10 +562,19 @@ class PathFinderMenuHandler implements ActionListener, ItemListener {
 				System.out.println("File format not supported.");
 				return;
 			}
-
-			this.view.setObstacles(result, height, width);
+			
+			// inverse cost to: lethal = 255, freespace = 0
+			for (int i = 0 ; i < height; ++i) {
+				for (int j = 0 ; j < width; ++j) {
+					cost[i][j] = 255 - cost[i][j];					
+				}	
+			}
+			
+			this.view.setCosts(cost, height, width);
 			this.view.setStartNode(height/2, width/3);
 			this.view.setEndNode(height/2, width*2/3);
+			
+			this.view.clearMap();
 		}
 		else if (arg.equals("Save map")) {
 			JFileChooser chooser = new JFileChooser();
@@ -489,15 +586,22 @@ class PathFinderMenuHandler implements ActionListener, ItemListener {
 
 			BufferedImage img = new BufferedImage(view.getCountColumn(), view.getCountRow(), BufferedImage.TYPE_INT_RGB);
 
-			File file = chooser.getSelectedFile();
-
-			int obstacles[][] = view.getObstacles();
+			File file = chooser.getSelectedFile();			
 
 			for(int x = 0; x < view.getCountColumn(); ++x) {
 				for(int y = 0; y < view.getCountRow(); ++y) {
-					int r = obstacles[y][x];
-					int g = obstacles[y][x]; 
-					int b = obstacles[y][x];
+					Node node = view.getMapView().getNode(y, x);
+					
+					int colorFromCost = 0;
+					
+					if (node.getType() == Node.Type.NORMAL) {
+						colorFromCost = 255 - node.getCost();
+					}
+					
+					int r = colorFromCost;
+					int g = colorFromCost; 
+					int b = colorFromCost;
+					
 					int col = (r << 16) | (g << 8) | b;
 					img.setRGB(x, y, col);
 				}

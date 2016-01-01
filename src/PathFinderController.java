@@ -19,8 +19,21 @@ public class PathFinderController {
 		}
 
 		@Override
-		public void refresh() {
+		public void refresh() 
+		{
 			view.repaint();
+		}
+
+		@Override
+		public void setTimeExecution(String duration) 
+		{
+			view.setTimeAlgorithmExecution(duration + " ms");
+		}
+
+		@Override
+		public void setPathLength(String length) 
+		{
+			view.setPathLenghtAlgorithm(length);
 		}
 	}
 	
@@ -44,6 +57,9 @@ public class PathFinderController {
 		public void actionPerformed(ActionEvent e) 
 		{
 			view.clearValues();
+			view.setTimeAlgorithmExecution(" - ");
+			view.setPathLenghtAlgorithm(" - ");
+			
 			model.setMap(view.getMapView());
 			model.startAlgorithm(view.getAlgorithmName(), view.getStartNode(), view.getEndNode());
 		}
@@ -60,9 +76,7 @@ public class PathFinderController {
 	class NeighboursCountChangeListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 		        JComboBox<?> cb = (JComboBox<?>)e.getSource();
-		        int neighbourscount =  Integer.parseInt((String) cb.getSelectedItem());
-		        System.out.println(neighbourscount);
-		        model.setNeighboursCount(neighbourscount);
+		        model.setNeighboursCount(Integer.parseInt((String) cb.getSelectedItem()));
 		}
 	}
 }
