@@ -11,13 +11,16 @@ Pathfinder is a project to be used to learn about pathfinding algorithms (based 
 Currently supported algorithms
 
 * Breadth-First-Search
+* Dijkstra
+* Greedy-Breadth-First-Search
+* A-Star
 
 ![dijkstra](./img/screen-dijkstra.png)
 
 Running the example
 ------------------
 
-If you want to see an user interface, type the falowing:
+If you want to see an user interface, type the following:
 
 ```
 javac *.java

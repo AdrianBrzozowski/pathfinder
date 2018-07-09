@@ -140,6 +140,11 @@ public abstract class Algorithm extends Thread {
 		this.property = property;
 	}
 
+	public void stopAlgorithm()
+	{
+		failed = true;
+	}
+	
 	protected List<Node> constructPath(Node node) 
 	{
 		if (!finished) {
@@ -150,8 +155,7 @@ public abstract class Algorithm extends Thread {
 		int count = 0;
 
 		while (node.pathParent != null) {
-			newPath.add(node);
-
+			newPath.add(node);			
 			node = node.pathParent;
 			++count;
 		}

@@ -45,13 +45,24 @@ public class PathFinderModel {
 	}
 
 	public void startAlgorithm(String algorithmName, Node start, Node goal) {
-
+		
+		if (this.algorithm != null) {
+			this.algorithm.stopAlgorithm();
+		}
+		
 		this.algorithm = AlgorithmFactory.getInstance(algorithmName, getMap(), start, goal);
 		
 		if (this.algorithm != null) {
 			this.algorithm.setProperty(algorithmProp);
 			this.algorithm.setListener(algorithmListener);
 			this.algorithm.start();
+		}
+	}
+	
+	public void stopAlgorithm()
+	{
+		if (this.algorithm != null) {
+			this.algorithm.stopAlgorithm();
 		}
 	}
 

@@ -18,7 +18,7 @@ public class BreadthFirstSearch extends Algorithm {
 		closedList.add(start);
 		start.pathParent = null;
 
-		while (!openList.isEmpty()) {
+		while (!openList.isEmpty() && failed == false) {
 			Node node = openList.removeFirst();
 
 			if (node.equals(goal)) {	

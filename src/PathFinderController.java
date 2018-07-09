@@ -44,6 +44,7 @@ public class PathFinderController {
 
 		// add listeners
 		this.view.addStartListener(new StartListener());
+		this.view.addStopListener(new StopListener());
 		this.view.addClearButtonListener(new ClearListener());
 		this.view.addNeighborsCountListener(new NeighboursCountChangeListener());
 		
@@ -62,6 +63,13 @@ public class PathFinderController {
 			
 			model.setMap(view.getMapView());
 			model.startAlgorithm(view.getAlgorithmName(), view.getStartNode(), view.getEndNode());
+		}
+	}
+	
+	class StopListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) 
+		{
+			model.stopAlgorithm();
 		}
 	}
 

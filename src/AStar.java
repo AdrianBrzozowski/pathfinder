@@ -1,9 +1,9 @@
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class Dijkstra extends Algorithm {
+public class AStar extends Algorithm {
 
-	public Dijkstra(GridMap map, Node start, Node goal) 
+	public AStar(GridMap map, Node start, Node goal) 
 	{
 		super(map, start, goal);
 	}
@@ -23,7 +23,7 @@ public class Dijkstra extends Algorithm {
 		start.setDistance(0.0f);
 		
 		while (!frontier.isEmpty() && failed == false) {
-			Node node = getNodeMinDistance(frontier);
+			Node node = getNodeTheBest(frontier);
 			frontier.remove(node);
 			
 			if (node.equals(goal)) {	
@@ -61,18 +61,28 @@ public class Dijkstra extends Algorithm {
 		this.path = (LinkedList<Node>) constructPath(goal);
 	}
 	
-	public Node getNodeMinDistance(LinkedList<Node> set)
+	public Node getNodeTheBest(LinkedList<Node> set)
 	{
 		Node bestNode = null;
-		double bestDistance = Double.MAX_VALUE;
+		double bestValue = Double.MAX_VALUE;
 		
 		for (Node node : set) {
-			if (node.getDistance() < bestDistance) {
-				bestDistance = node.getDistance();
+			double nodeValue = node.getDistance() + calculateDistance(node, goal);
+			if (nodeValue < bestValue) {
+				bestValue = nodeValue;
 				bestNode = node;
 			}
 		}
 		
 		return bestNode;
+	}
+	
+	protected double calculateDistance(Node n1, Node n2){
+		int xVektor = n1.getPositionX() - n2.getPositionX();
+		int yVektor = n1.getPositionY() - n2.getPositionY();
+
+		if(xVektor == 0 && yVektor == 0) return 0;
+
+		return Math.sqrt((xVektor*xVektor) + (yVektor*yVektor));
 	}
 }

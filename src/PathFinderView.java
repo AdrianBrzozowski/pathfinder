@@ -52,6 +52,7 @@ public class PathFinderView extends JFrame {
 
 	// buttons
 	final static String START_BUTTON_NAME = "Start";
+	final static String STOP_BUTTON_NAME = "Stop";
 	final static String CLEAR_BUTTON_NAME = "Clear";
 
 	// spinners
@@ -83,6 +84,7 @@ public class PathFinderView extends JFrame {
 	// create objects
 	private MapView mapView = new MapView(INIT_ROW_COUNT_MAP, INIT_COL_COUNT_MAP);
 	private JButton startButton = new JButton(START_BUTTON_NAME);
+	private JButton stopButton = new JButton(STOP_BUTTON_NAME);
 	private JButton clearButton = new JButton(CLEAR_BUTTON_NAME);
 	
 	private SpinnerModel rowCountModelSpinner = new SpinnerNumberModel(ROW_COUNT_DEFAULT, ROW_COUNT_MIN, ROW_COUNT_MAX,
@@ -167,6 +169,10 @@ public class PathFinderView extends JFrame {
 		gbc.anchor = GridBagConstraints.NORTHWEST;
 		controlPanel.add(startButton, gbc);
 
+		gbc.gridx = 0;
+		++gbc.gridy;
+		controlPanel.add(stopButton, gbc);
+		
 		gbc.gridx = 0;
 		++gbc.gridy;
 		controlPanel.add(clearButton, gbc);
@@ -311,6 +317,11 @@ public class PathFinderView extends JFrame {
 	public void addStartListener(ActionListener al) 
 	{
 		startButton.addActionListener(al);
+	}
+	
+	public void addStopListener(ActionListener al) 
+	{
+		stopButton.addActionListener(al);
 	}
 
 	public void addClearButtonListener(ActionListener al) 
